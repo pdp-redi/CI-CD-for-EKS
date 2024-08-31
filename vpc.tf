@@ -1,44 +1,39 @@
-resource "aws_vpc" "eks_vpc" {
+# create a vpc
+resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = var.env
+    Name = "${var.env}-vpc"
   }
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+# create a internet gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc.id
+  tags = {
+    Name = "${var.env}-igw"
+  }
+}
+
+# public subnets 
 resource "aws_subnet" "public_subnet" {
   for_each = var.public_subnets
 
-  vpc_id            = aws_vpc.eks_vpc.id
+  vpc_id            = aws_vpc.vpc.id
   cidr_block        = each.value.cidr_block
   availability_zone = each.value.availability_zone
 
   tags = {
-    Name = "eks-public-subnet-${each.key}"
+    Name = "${var.env}-public-subnet-${each.key}"
   }
 }
 
-resource "aws_subnet" "private_subnet" {
-  for_each = var.private_subnets
-
-  vpc_id            = aws_vpc.eks_vpc.id
-  cidr_block        = each.value.cidr_block
-  availability_zone = each.value.availability_zone
-
-  tags = {
-    Name = "eks-private-subnet-${each.key}"
-  }
-}
-
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.eks_vpc.id
-
-  tags = {
-    Name = "eks-vpc-igw"
-  }
-}
-
+# public route table 
 resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.eks_vpc.id
+  vpc_id = aws_vpc.vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -46,44 +41,12 @@ resource "aws_route_table" "public_rt" {
   }
 
   tags = {
-    Name = "eks-vpc-public-rt"
+    Name = "${var.env}-public-rt"
   }
 }
 
-# Create the NAT Gateway for private subnets
-resource "aws_eip" "nat_eip" {
-  domain = "vpc"
-  tags = {
-    Name = "${var.env}-elastic-ip"
-  }
-}
-
-resource "aws_nat_gateway" "nat_gw" {
-  allocation_id = aws_eip.nat_eip.id
-  subnet_id     = aws_subnet.public_subnet["subnet1"].id
-  depends_on    = [aws_internet_gateway.igw]
-
-  tags = {
-    Name = "eks-ngw"
-  }
-}
-
-# Create Route Tables
-resource "aws_route_table" "private_rt" {
-  vpc_id = aws_vpc.eks_vpc.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat_gw.id
-  }
-
-  tags = {
-    Name = "private-route-table"
-  }
-}
-
-# Associate Subnets with Route Tables
-resource "aws_route_table_association" "public_association" {
+# Associate Public Subnets with Public Route Tables
+resource "aws_route_table_association" "public_rt_association" {
   for_each = {
     for key, value in var.public_subnets : key => value if value.map_public_ip_on_launch
   }
@@ -92,8 +55,54 @@ resource "aws_route_table_association" "public_association" {
   route_table_id = aws_route_table.public_rt.id
 }
 
+# Create the Elastic IP for Nat gateway
+resource "aws_eip" "nat_eip" {
+  domain = "vpc"
+  tags = {
+    Name = "${var.env}-elastic-ip"
+  }
+}
 
-resource "aws_route_table_association" "private_association" {
+# Create NAT Gateway
+resource "aws_nat_gateway" "nat_gw" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.public_subnet["subnet1"].id
+  depends_on    = [aws_internet_gateway.igw]
+
+  tags = {
+    Name = "${var.env}-ngw"
+  }
+}
+
+# Create Private Subnets
+resource "aws_subnet" "private_subnet" {
+  for_each = var.private_subnets
+
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = each.value.cidr_block
+  availability_zone = each.value.availability_zone
+
+  tags = {
+    Name = "${var.env}-private-subnet-${each.key}"
+  }
+}
+
+# Create Private Route Tables
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat_gw.id
+  }
+
+  tags = {
+    Name = "${var.env}-private-rt"
+  }
+}
+
+# Associate Private Subnets with Private Route Tables
+resource "aws_route_table_association" "private_rt_association" {
   for_each = {
     for key, value in var.private_subnets : key => value if !value.map_public_ip_on_launch
   }

@@ -1,5 +1,13 @@
+variable "aws_region" {
+  description = "region name"
+  type        = string
+  default     = "ap-south-1"
+}
+
 variable "env" {
-  default = "eks-cluster"
+  description = "demo-asg-alb-acm-route53"
+  type        = string
+  default     = "eks"
 }
 
 variable "public_subnets" {
