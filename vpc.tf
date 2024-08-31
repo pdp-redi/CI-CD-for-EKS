@@ -52,7 +52,10 @@ resource "aws_route_table" "puble_rt" {
 
 # Create the NAT Gateway for private subnets
 resource "aws_eip" "nat_eip" {
-  vpc = true
+  domain = "vpc"
+  tags = {
+    Name = "${var.env}-elastic-ip"
+  }
 }
 
 resource "aws_nat_gateway" "nat_gw" {
