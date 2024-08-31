@@ -1,5 +1,5 @@
 variable "env" {
-    default = "eks-cluster"
+  default = "eks-cluster"
 }
 
 variable "public_subnets" {
