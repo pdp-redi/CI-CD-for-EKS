@@ -47,13 +47,12 @@ resource "aws_route_table" "public_rt" {
 
 # Associate Public Subnets with Public Route Tables
 resource "aws_route_table_association" "public_rt_association" {
-  for_each = {
-    for key, value in var.public_subnets : key => value if value.map_public_ip_on_launch
-  }
+  for_each = { for subnet in aws_subnet.public_subnet : subnet.id => subnet if subnet.map_public_ip_on_launch }
 
-  subnet_id      = aws_subnet.public_subnet[each.key].id
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.public_rt.id
 }
+
 
 # Create the Elastic IP for Nat gateway
 resource "aws_eip" "nat_eip" {
@@ -103,10 +102,8 @@ resource "aws_route_table" "private_rt" {
 
 # Associate Private Subnets with Private Route Tables
 resource "aws_route_table_association" "private_rt_association" {
-  for_each = {
-    for key, value in var.private_subnets : key => value if !value.map_public_ip_on_launch
-  }
+  for_each = { for subnet in aws_subnet.private_subnet : subnet.id => subnet if subnet.map_public_ip_on_launch }
 
-  subnet_id      = aws_subnet.private_subnet[each.key].id
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.private_rt.id
 }
