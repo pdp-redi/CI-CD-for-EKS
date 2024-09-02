@@ -54,51 +54,51 @@ resource "aws_route_table" "public_rt" {
 # }
 
 
-# # Create the Elastic IP for Nat gateway
-# resource "aws_eip" "nat_eip" {
-#   domain = "vpc"
-#   tags = {
-#     Name = "${var.env}-elastic-ip"
-#   }
-# }
+# Create the Elastic IP for Nat gateway
+resource "aws_eip" "nat_eip" {
+  domain = "vpc"
+  tags = {
+    Name = "${var.env}-elastic-ip"
+  }
+}
 
-# # Create NAT Gateway
-# resource "aws_nat_gateway" "nat_gw" {
-#   allocation_id = aws_eip.nat_eip.id
-#   subnet_id     = aws_subnet.public_subnet["subnet1"].id
-#   depends_on    = [aws_internet_gateway.igw]
+# Create NAT Gateway
+resource "aws_nat_gateway" "nat_gw" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.public_subnet["subnet1"].id
+  depends_on    = [aws_internet_gateway.igw]
 
-#   tags = {
-#     Name = "${var.env}-ngw"
-#   }
-# }
+  tags = {
+    Name = "${var.env}-ngw"
+  }
+}
 
-# # Create Private Subnets
-# resource "aws_subnet" "private_subnet" {
-#   for_each = var.private_subnets
+# Create Private Subnets
+resource "aws_subnet" "private_subnet" {
+  for_each = var.private_subnets
 
-#   vpc_id            = aws_vpc.vpc.id
-#   cidr_block        = each.value.cidr_block
-#   availability_zone = each.value.availability_zone
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = each.value.cidr_block
+  availability_zone = each.value.availability_zone
 
-#   tags = {
-#     Name = "${var.env}-private-subnet-${each.key}"
-#   }
-# }
+  tags = {
+    Name = "${var.env}-private-subnet-${each.key}"
+  }
+}
 
-# # Create Private Route Tables
-# resource "aws_route_table" "private_rt" {
-#   vpc_id = aws_vpc.vpc.id
+# Create Private Route Tables
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.vpc.id
 
-#   route {
-#     cidr_block     = "0.0.0.0/0"
-#     nat_gateway_id = aws_nat_gateway.nat_gw.id
-#   }
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat_gw.id
+  }
 
-#   tags = {
-#     Name = "${var.env}-private-rt"
-#   }
-# }
+  tags = {
+    Name = "${var.env}-private-rt"
+  }
+}
 
 # # Associate Private Subnets with Private Route Tables
 # resource "aws_route_table_association" "private_rt_association" {
