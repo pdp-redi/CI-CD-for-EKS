@@ -27,17 +27,20 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ap-south-1  # Specify your AWS region
+        aws-region: ${{ secrets.REGION }}  # Specify your AWS region
 
     - name: Initialize Terraform
       run: terraform init
+
+    - name: fmt Terraform
+      run: terraform fmt
+
+    - name: validate Terraform
+      run: terraform validate
 
     - name: Plan Terraform
       run: terraform plan
 
     - name: Apply Terraform
-      if: github.ref == 'refs/heads/master'  # Only apply on pushes to main branch
+      if: github.ref == 'refs/heads/master'  # Only apply on pushes to master branch
       run: terraform apply -auto-approve
-
-    - name: Terraform output
-      run: terraform output
