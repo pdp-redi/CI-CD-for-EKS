@@ -73,32 +73,32 @@ resource "aws_route_table" "public_rt" {
 #   }
 # }
 
-# # Create Private Subnets
-# resource "aws_subnet" "private_subnet" {
-#   for_each = var.private_subnets
+# Create Private Subnets
+resource "aws_subnet" "private_subnet" {
+  for_each = var.private_subnets
 
-#   vpc_id            = aws_vpc.vpc.id
-#   cidr_block        = each.value.cidr_block
-#   availability_zone = each.value.availability_zone
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = each.value.cidr_block
+  availability_zone = each.value.availability_zone
 
-#   tags = {
-#     Name = "${var.env}-private-subnet-${each.key}"
-#   }
-# }
+  tags = {
+    Name = "${var.env}-private-subnet-${each.key}"
+  }
+}
 
-# # Create Private Route Tables
-# resource "aws_route_table" "private_rt" {
-#   vpc_id = aws_vpc.vpc.id
+# Create Private Route Tables
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.vpc.id
 
-#   route {
-#     cidr_block     = "0.0.0.0/0"
-#     nat_gateway_id = aws_nat_gateway.nat_gw.id
-#   }
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat_gw.id
+  }
 
-#   tags = {
-#     Name = "${var.env}-private-rt"
-#   }
-# }
+  tags = {
+    Name = "${var.env}-private-rt"
+  }
+}
 
 # # Associate Private Subnets with Private Route Tables
 # resource "aws_route_table_association" "private_rt_association" {
