@@ -6,44 +6,44 @@ resource "aws_vpc" "vpc" {
   }
 }
 
-# data "aws_availability_zones" "available" {
-#   state = "available"
-# }
+data "aws_availability_zones" "available" {
+  state = "available"
+}
 
-# # create a internet gateway
-# resource "aws_internet_gateway" "igw" {
-#   vpc_id = aws_vpc.vpc.id
-#   tags = {
-#     Name = "${var.env}-igw"
-#   }
-# }
+# create a internet gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc.id
+  tags = {
+    Name = "${var.env}-igw"
+  }
+}
 
-# # public subnets 
-# resource "aws_subnet" "public_subnet" {
-#   for_each = var.public_subnets
+# public subnets 
+resource "aws_subnet" "public_subnet" {
+  for_each = var.public_subnets
 
-#   vpc_id            = aws_vpc.vpc.id
-#   cidr_block        = each.value.cidr_block
-#   availability_zone = each.value.availability_zone
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = each.value.cidr_block
+  availability_zone = each.value.availability_zone
 
-#   tags = {
-#     Name = "${var.env}-public-subnet-${each.key}"
-#   }
-# }
+  tags = {
+    Name = "${var.env}-public-subnet-${each.key}"
+  }
+}
 
-# # public route table 
-# resource "aws_route_table" "public_rt" {
-#   vpc_id = aws_vpc.vpc.id
+# public route table 
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.vpc.id
 
-#   route {
-#     cidr_block = "0.0.0.0/0"
-#     gateway_id = aws_internet_gateway.igw.id
-#   }
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
 
-#   tags = {
-#     Name = "${var.env}-public-rt"
-#   }
-# }
+  tags = {
+    Name = "${var.env}-public-rt"
+  }
+}
 
 # # Associate Public Subnets with Public Route Tables
 # resource "aws_route_table_association" "public_rt_association" {
