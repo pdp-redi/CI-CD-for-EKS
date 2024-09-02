@@ -44,3 +44,6 @@ jobs:
     - name: Apply Terraform
       if: github.ref == 'refs/heads/master'  # Only apply on pushes to master branch
       run: terraform apply -auto-approve
+
+    - name: Terraform output
+      run: terraform output
