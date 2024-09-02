@@ -54,24 +54,24 @@ resource "aws_route_table" "public_rt" {
 # }
 
 
-# # Create the Elastic IP for Nat gateway
-# resource "aws_eip" "nat_eip" {
-#   domain = "vpc"
-#   tags = {
-#     Name = "${var.env}-elastic-ip"
-#   }
-# }
+# Create the Elastic IP for Nat gateway
+resource "aws_eip" "nat_eip" {
+  domain = "vpc"
+  tags = {
+    Name = "${var.env}-elastic-ip"
+  }
+}
 
-# # Create NAT Gateway
-# resource "aws_nat_gateway" "nat_gw" {
-#   allocation_id = aws_eip.nat_eip.id
-#   subnet_id     = aws_subnet.public_subnet["subnet1"].id
-#   depends_on    = [aws_internet_gateway.igw]
+# Create NAT Gateway
+resource "aws_nat_gateway" "nat_gw" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.public_subnet["subnet1"].id
+  depends_on    = [aws_internet_gateway.igw]
 
-#   tags = {
-#     Name = "${var.env}-ngw"
-#   }
-# }
+  tags = {
+    Name = "${var.env}-ngw"
+  }
+}
 
 # Create Private Subnets
 resource "aws_subnet" "private_subnet" {
